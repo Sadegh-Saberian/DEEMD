@@ -26,29 +26,37 @@ import h5py
 
 
 parser = argparse.ArgumentParser(description='MIL')
-parser.add_argument('--k', type=str, default='', help='path to train MIL library binary')
-parser.add_argument('--i', type=str, default='', help='repetition number')
+parser.add_argument('--k', type=int, default='1', help='k top patches to train on')
+parser.add_argument('--i', type=int, default='1', help='experiment repetition number')
+parser.add_argument('--e', type=int, default='100', help='number of epochs for training')
+parser.add_argument('--train_lib', type=str, default='./meta/HRCE_train_metadata.csv', help='path to the metadata csv file for training')
+parser.add_argument('--val_lib', type=str, default='./meta/HRCE_valid_metadata.csv', help='path to the metadata csv file for validation')
+parser.add_argument('--base_path', type=str, default='/project/compbio-lab/MIL-COVID19/RxRx19a', help='base path for reading the image files')
+parser.add_argument('--test', type=int, default='5', help='the number of epochs between each validation procedure')
+parser.add_argument('--batch_size', type=int, default='128', help='batch size for training and updating weights')
+parser.add_argument('--n_workers', type=int, default='1', help='number of workers for dataloaders')
+parser.add_argument('--overlap', type=float, default='0.5', help='patch overlapping factor')
+parser.add_argument('--patch_size', type=int, default='256', help='size of the extracted patches')
+parser.add_argument('--n_classes', type=int, default='2', help='number of the classes in the dataset')
+parser.add_argument('--output_path', type=str, default='/project/compbio-lab/MIL-COVID19/RxRx19a/output/', help='base path for storing the model params')
+
 global args
 args = parser.parse_args()
-nepochs = 150
-
-train_lib = './meta/HRCE_train_metadata.csv'
-val_lib = './meta/HRCE_valid_metadata.csv'
-treated_test_lib = './meta/HRCE_test_treated_metadata.csv'
-untreated_test_lib = './meta/HRCE_test_untreated_metadata.csv'
-
-base_path = '/project/compbio-lab/MIL-COVID19/RxRx19a'
-test_every = 5
-batch_size = 128
-workers = 1
+nepochs = args.e
+train_lib = args.train_lib
+val_lib = args.val_lib
+base_path = args.base_path
+test_every = args.test
+batch_size = args.batch_size
+workers = args.n_workers
 k_top = int(args.k)
 rep_n = (args.i)
-overlap = 1 - 0.5
-patch_size = int(256)
-n_classes = 2
+overlap = 1 - args.overlap
+patch_size = args.patch_size
+n_classes = args.n_classes
 print(k_top)
 best_acc = 0.0
-output = '/project/compbio-lab/MIL-COVID19/RxRx19a/output/'
+output = args.output_path
 
 def calc_err(pred,real):
     pred = np.array(pred)
@@ -97,8 +105,6 @@ class MILdataset_RxRx19(data.Dataset):
         bags_lst = []
         bagIDX_lst = []
         targets_lst = []
-        instances_lst = []
-        bag_names_lst = []
         treatment_lst = []
         conc_lst = []
         instance_lvl_targets = []
@@ -106,7 +112,6 @@ class MILdataset_RxRx19(data.Dataset):
         status = []
         condition_lst = []
         categories = ['background'] + list(np.unique(data_df.disease_condition))
-        #         data_df['label'] = pd.Categorical(data_df.disease_condition,categories=categories,ordered = True).codes
         tmp_labels = pd.Categorical(data_df.disease_condition, categories=categories, ordered=True).codes.copy()
         ## Index(['background', 'Active SARS-CoV-2', 'Mock', 'UV Inactivated SARS-CoV-2'], dtype='object')
         ## Categories (4, object): [background < Active SARS-CoV-2 < Mock < UV Inactivated SARS-CoV-2]
@@ -146,8 +151,7 @@ class MILdataset_RxRx19(data.Dataset):
             treatment_lst.append(row['treatment'])
             conc_lst.append(row['treatment_conc'])
             condition_lst.append(row.disease_condition)
-        #             print('done adding bag to the trainig lists.')
-        #         self.weights = float(targets_lst.count(1)/(targets_lst.count(1) + targets_lst.count(0)))
+
         self.treatment = treatment_lst
         self.condition = condition_lst
         self.treatment_conc = conc_lst
@@ -155,14 +159,11 @@ class MILdataset_RxRx19(data.Dataset):
         self.targets = targets_lst
         self.grid = grid
         self.status = status
-        #         self.instances = instances_lst
         self.bagIDX = bagIDX_lst
         self.transform = transform
         self.mode = None
-        #         self.feature_size = feature_size
         self.patch_size = patch_size
         self.t_data = []
-        #         self.backgorund_class = background_class
         self.instance_lvl_targets = instance_lvl_targets
         print('Number of bags: {}, Number of instances: {} , exec time: {}'.format(len(bags_lst), len(grid),
                                                                                    time.time() - start_time))
@@ -194,9 +195,7 @@ class MILdataset_RxRx19(data.Dataset):
             img = self.bags[bagIDX][coord[0]:(coord[0] + self.patch_size),
                   coord[1]:(coord[1] + self.patch_size), :]
             if self.transform is not None:
-                #                 print(img.shape)
                 img = self.transform(img)
-            #                 print(img.shape)
             return img
         elif self.mode == 2:
             bagIDX, grid, target = self.t_data[index]
@@ -204,9 +203,7 @@ class MILdataset_RxRx19(data.Dataset):
             img = self.bags[bagIDX][grid[0]:(grid[0] + self.patch_size),
                   grid[1]:(grid[1] + self.patch_size), :]
             if self.transform is not None:
-                #                 print(img.shape)
                 img = self.transform(img)
-            #                 print(img.shape)
             return img, target
 
     def __len__(self):
@@ -239,9 +236,7 @@ def train(run, loader, model, criterion, optimizer):
     for i, (input, target) in enumerate(loader):
         if i % 250 == 0:
             print('Training\tEpoch: [{}/{}]\tBatch: [{}/{}]'.format(run + 1, nepochs, i + 1, len(loader)))
-        #         input = input.cuda()
         input = torch.FloatTensor(input.float()).cuda()
-        #         target = target.cuda()
         target = (target.to(torch.int64)).cuda()
         output, _ = model(input)
         loss = criterion(output, target)
@@ -291,14 +286,11 @@ pos_weight = torch.FloatTensor([1,1])
 criterion = nn.CrossEntropyLoss(weight= pos_weight).cuda()
 optimizer = optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-4)
 cudnn.benchmark = True
-# exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 
-#open output file
 fconv = open(os.path.join(output,'convergence'+str(k_top)+'_'+rep_n+'.csv'), 'w')
 fconv.write('epoch,metric,value\n')
 fconv.close()
 
-#loop throuh epochs
 for epoch in range(nepochs):
     train_dset.setmode(1)
     train_probs,train_features = inference(epoch, train_loader, model)
@@ -316,7 +308,6 @@ for epoch in range(nepochs):
     if val_lib and (epoch+1) % test_every == 0:
         val_dset.setmode(1)
         val_probs,val_features = inference(epoch, val_loader, model)
-        # maxs = group_max(np.array(val_dset.bagIDX), val_probs, len(val_dset.targets))
         maxs = group_kth_max(np.array(val_dset.bagIDX), val_probs, k_top)
         val_pred = [1 if x >= 0.5 else 0 for x in maxs]
         err,fpr,fnr = calc_err(val_pred, val_dset.targets)
