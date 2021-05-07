@@ -415,3 +415,19 @@ y_actu = pd.Series(untreated_test_dset.targets, name='Actual')
 y_pred = pd.Series(untreated_test_pred, name='Predicted')
 df_confusion = pd.crosstab(y_actu, y_pred)
 print(df_confusion)
+
+## efficacy score estimation for each sample image
+
+lll = ['Mock', 'Active SARS-CoV-2']
+cnt = 0
+interesting = []
+train_active_probs = []
+train_sc_lst = []
+for b in range(len(treated_test_dset.targets)):
+    sample_idx = range(b * 49, (b + 1) * 49)
+    max_prob = np.median(sorted(treated_test_probs[sample_idx])[-k_top:])
+    interesting.append((lll[int(treated_test_dset.targets[b])], treated_test_dset.treatment[b],
+                        treated_test_dset.treatment_conc[b], max_prob))
+interesting_df = pd.DataFrame(interesting, columns=['Condition', 'treatment', 'concentration', 'Score'])
+interesting_df.to_csv('eff_score_k.csv', header=True, index=False)
+
