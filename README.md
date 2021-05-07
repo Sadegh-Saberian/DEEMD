@@ -25,7 +25,7 @@ To transfer DEEMD pipeline to another dataset follow the guideline below. This g
 Provide proper arguments for `Analysis/analyze.py` and run it. It will provide you with the predicted infection probabilities for each patch in `h5` format, estimated infection probabilities in `.csv` which is later used for calculating treatment efficacy scores. It will also generates performance report for each split provided.
 
 ## Treatment efficacy score estimation
-Use the `.csv` file generated in inference to run the `Analysis/Analysis.R`. It will generate a ranked list of treatments along with their estimated efficacy score in `.csv'.
+Use the `.csv` file generated in inference to run the `Analysis/Analysis.R`. It will generate a ranked list of treatments along with their estimated efficacy score in `.csv`.
 
 
 
