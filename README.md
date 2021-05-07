@@ -14,11 +14,21 @@ To transfer DEEMD pipeline to another dataset follow the guideline below. This g
 1. Create a csv file that includes meta data of the samples in the dataset. In particular, this should include a `path` column for loading the samples.
 2. Split the csv file into train, validation, and test set.
 3. Use the training set to calculate the emperical mean and standard deviation for each channel of the samples.
-4. 
+4. Update `Training/SMIL.py` with calculated channel mean and standard deviations.
 
 ## Training with Deep MIL
 1. For training the network based on a new dataset, modify the data loader to properly accomodate your needs. This mostly consists of setting the number of input channels in the sample images, the transfomations required to be performed on the images, meta data required to be stored for each instance, and the patch selection mechanism. 
 2. Define a deep neural network along with the loss function suitable for the task at hand.
 3. Then run the `Training/SMIL.py` which trains a model based on ResNet50 and logs the training process in `convergence.csv`. The best model based on the validation set, if presented, is stored at `checkpoint_best.pth`.
+
+## Inference with Deep MIL
+Provide proper arguments for `Analysis/analyze.py` and run it. It will provide you with the predicted infection probabilities for each patch in `h5` format, estimated infection probabilities in `.csv` which is later used for calculating treatment efficacy scores. It will also generates performance report for each split provided.
+
+## Treatment efficacy score estimation
+Use the `.csv` file generated in inference to run the `Analysis/Analysis.R`. It will generate a ranked list of treatments along with their estimated efficacy score in `.csv'.
+
+
+
+
 
 
