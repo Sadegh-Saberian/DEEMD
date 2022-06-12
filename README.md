@@ -29,6 +29,20 @@ Use the `.csv` file generated in inference to run the `Analysis/Analysis.R`. It 
 
 
 ## Citation
+
+    @ARTICLE{tmi2022,
+       AUTHOR       = {M.Sadegh Saberian and Kathleen Moriarty and 
+          Andrea Olmstead and Christian Hallgrimson and François Jean and 
+          Ivan Robert Nabi and Maxwell Libbrecht and Ghassan Hamarneh},
+       JOURNAL      = {IEEE Transactions on Medical Imaging (IEEE TMI)},
+       TITLE        = {DEEMD: Drug Efficacy Estimation against SARS-CoV-2 based 
+          on Cell Morphology with Deep Multiple Instance Learning.},
+       YEAR         = {2022},
+       DOI          = {10.1109/TMI.2022.3178523},
+       KEYWORDS     = {Deep Learning, Machine Learning, COVID19, SARS-CoV-2},
+       PDF          = {http://www.cs.sfu.ca/~hamarneh/ecopy/tmi2022.pdf},
+    }
+
 If you found the content of this repository useful, please consider citing our work:
 
 PDF:  https://www.cs.sfu.ca/~hamarneh/ecopy/tmi2022.pdf
