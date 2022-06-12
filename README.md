@@ -28,7 +28,11 @@ Provide proper arguments for `Analysis/analyze.py` and run it. It will provide y
 Use the `.csv` file generated in inference to run the `Analysis/Analysis.R`. It will generate a ranked list of treatments along with their estimated efficacy score in `.csv`.
 
 
+## Citation
+If you found the content of this repository useful, please consider citing our work:
 
+PDF:  https://www.cs.sfu.ca/~hamarneh/ecopy/tmi2022.pdf
 
+DOI: http://dx.doi.org/10.1109/TMI.2022.3178523 
 
-
+PubMed: https://pubmed.ncbi.nlm.nih.gov/35622798
